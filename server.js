@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
   res.send('✅ DanceCount Auth API is Live');
 });
 
-// ---------------------- Send OTP ----------------------
+// ✅ Send OTP Route
 app.post('/send-otp', async (req, res) => {
   const { email } = req.body;
 
@@ -48,18 +48,12 @@ app.post('/send-otp', async (req, res) => {
   }
 
   try {
-    // Lookup the studio by email, but allow owner email as well
     const StudioCollection = mongoose.connection.collection('studios');
 
+    // ✅ Check for approved studio by contactEmail
     const existingStudio = await StudioCollection.findOne({
-      $and: [
-        { status: "Approved" },
-        {
-          $or: [
-            { contactEmail: email.toLowerCase() },
-          ]
-        }
-      ]
+      contactEmail: email.toLowerCase(),
+      status: "Approved"
     });
 
     if (!existingStudio) {
@@ -89,7 +83,6 @@ app.post('/send-otp', async (req, res) => {
 
     await user.save();
 
-    // Send email via Nodemailer
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -98,19 +91,19 @@ app.post('/send-otp', async (req, res) => {
       }
     });
 
-    await transporter.sendMail({
+    const mailOptions = {
       from: `"DanceCount" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Your OTP for DanceCount',
       text: `Your OTP is: ${otp}`
-    });
+    };
 
+    await transporter.sendMail(mailOptions);
     console.log(`✅ OTP sent to ${email}: ${otp}`);
 
     return res.status(200).json({
       message: 'OTP sent!',
-      studioId: existingStudio._id.toString(),
-      contactNumber: existingStudio.contactNumber || ''
+      studioId: existingStudio._id.toString()
     });
 
   } catch (err) {
@@ -119,7 +112,7 @@ app.post('/send-otp', async (req, res) => {
   }
 });
 
-// ---------------------- Verify OTP ----------------------
+// ✅ Verify OTP Route
 app.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
@@ -134,33 +127,31 @@ app.post('/verify-otp', async (req, res) => {
       return res.status(401).json({ message: 'Invalid or expired OTP' });
     }
 
-    // Clear OTP after verification
     user.otp = null;
     user.otpExpires = null;
     await user.save();
 
     const StudioCollection = mongoose.connection.collection('studios');
-
     const existingStudio = await StudioCollection.findOne({
-      $and: [
-        { status: "Approved" },
-        {
-          $or: [
-            { contactEmail: email.toLowerCase() }
-          ]
-        }
-      ]
+      contactEmail: email.toLowerCase(),
+      status: "Approved"
     });
 
     if (!existingStudio) {
       return res.status(403).json({ message: 'Studio not found after verification' });
     }
 
+    // return res.status(200).json({
+    //   message: 'OTP verified successfully',
+    //   studioId: existingStudio._id.toString()
+    // });
+
     return res.status(200).json({
-      message: 'OTP verified successfully',
-      studioId: existingStudio._id.toString(),
-      contactNumber: existingStudio.contactNumber || ''
-    });
+  message: 'OTP verified successfully',
+  studioId: existingStudio._id.toString(),
+  email: existingStudio.contactEmail,        // ✅ add this
+  contactNumber: existingStudio.contactNumber // ✅ add this
+});
 
   } catch (err) {
     console.error('❌ Verify OTP error:', err);
