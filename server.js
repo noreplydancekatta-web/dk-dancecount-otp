@@ -141,17 +141,10 @@ app.post('/verify-otp', async (req, res) => {
       return res.status(403).json({ message: 'Studio not found after verification' });
     }
 
-    // return res.status(200).json({
-    //   message: 'OTP verified successfully',
-    //   studioId: existingStudio._id.toString()
-    // });
-
     return res.status(200).json({
-  message: 'OTP verified successfully',
-  studioId: existingStudio._id.toString(),
-  email: existingStudio.contactEmail,        // ✅ add this
-  contactNumber: existingStudio.contactNumber // ✅ add this
-});
+      message: 'OTP verified successfully',
+      studioId: existingStudio._id.toString()
+    });
 
   } catch (err) {
     console.error('❌ Verify OTP error:', err);
