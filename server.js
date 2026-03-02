@@ -14,7 +14,7 @@ const dbUsername = 'deepikasidral';
 const dbPassword = encodeURIComponent('deep@1711');
 const dbName = 'dance_katta_db';
 
-const uri = `mongodb+srv://${dbUsername}:${dbPassword}@cluster0.ysj38ta.mongodb.net/${dbName}?retryWrites=true&w=majority`;
+const uri = `mongodb://dance_katta_user:User%23DanceKatta%402026@127.0.0.1:27017/dance_katta_db?authSource=dance_katta_db`;
 
 mongoose.connect(uri, {
   useNewUrlParser: true,
